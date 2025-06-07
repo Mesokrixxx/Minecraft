@@ -7,7 +7,8 @@
 static unsigned int buffer_type_target[BUFFER_TYPE_COUNT] = {
 	GL_ARRAY_BUFFER,
 	GL_ELEMENT_ARRAY_BUFFER,
-	0, // BUFFER_VERTEX_ARRAY 
+	0, // BUFFER_VERTEX_ARRAY,
+	GL_UNIFORM_BUFFER,
 };
 
 void	_buffer_create(buffer_t *buffer, buffer_type_e type, buffer_usage_e usage)
@@ -88,9 +89,23 @@ void	buffer_data(buffer_t *buffer, size_t size, const void *data)
 
 void	buffer_subdata(buffer_t *buffer, size_t offset, size_t size, const void *data)
 {
-	ASSERT(buffer->size > size,
+	ASSERT(buffer->size >= size,
 		"Buffer overflow (buffer size: %zu - Data size: %zu", buffer->size, size);
+
+	if (!size)
+		return ;
 
 	buffer_bind(*buffer);
 	glBufferSubData(buffer_type_target[buffer->type], offset, size, data);
+}
+
+void	buffer_bindpoint_assign(buffer_t buffer, unsigned int *bind_point)
+{
+	static unsigned int bind_points[BUFFER_TYPE_COUNT];
+
+	unsigned int bp = bind_points[buffer.type];
+
+	glBindBufferBase(buffer_type_target[buffer.type], bp, buffer.id);
+	*bind_point = bp;
+	bind_points[buffer.type]++;
 }

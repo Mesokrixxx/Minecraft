@@ -4,5 +4,6 @@
 # include "assert.h"
 # include "macros.h"
 # include "file.h"
+# include "dynlist.h"
 
 #endif

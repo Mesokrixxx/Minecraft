@@ -23,6 +23,7 @@ typedef enum {
 typedef struct {
 	buffer_type_e type;
 	buffer_usage_e usage;
+	buffer_steptype_e steptype;
 	size_t size;
 	size_t stride;
 	const void *data;
@@ -42,7 +43,7 @@ typedef struct {
 
 	unsigned int element_count;
 	pipeline_elements_type_e element_type;
-}	pipeline_render_method_desc;
+}	pipeline_render_desc;
 
 typedef struct {
 	buffer_t vao;
@@ -52,6 +53,7 @@ typedef struct {
 	struct {
 		buffer_t buffer;
 		size_t stride;
+		buffer_steptype_e steptype;
 	}	*buffers;
 
 	struct {
@@ -67,9 +69,12 @@ void	pipeline_create(pipeline_t *pipeline, shader_t shader, int buffer_count, pi
 void	pipeline_destroy(pipeline_t *pipeline);
 void	pipeline_bind(pipeline_t pipeline);
 bool	pipeline_valid(pipeline_t pipeline);
-void	pipeline_assign_attributes(pipeline_t *pipeline, int attributes_count, pipeline_attributes_desc *attributes);
-void	pipeline_render_setup(pipeline_t *pipeline, pipeline_render_method_desc render_method);
+void	pipeline_attributes_assign(pipeline_t *pipeline, int attributes_count, pipeline_attributes_desc *attributes);
+void	pipeline_render_setup(pipeline_t *pipeline, pipeline_render_desc render_method);
 void	_pipeline_render(pipeline_t pipeline, unsigned int count, size_t offset);
+
+# define pipeline_subdata(pip_ptr, buf_idx, off, size, data) \
+	buffer_subdata(&(pip_ptr)->buffers[buf_idx].buffer, off, size, data)
 
 # define _PIPRENDER3(pip, count, off) _pipeline_render(pip, count, offset)
 # define _PIPRENDER2(pip, count) _pipeline_render(pip, count, 0)

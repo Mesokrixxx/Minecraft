@@ -4,8 +4,14 @@
 # include <cglm/struct/vec2.h>
 # include <cglm/struct/vec3.h>
 # include <cglm/struct/vec4.h>
+# include <cglm/struct/mat4.h>
+# include <cglm/struct/cam.h>
 
 # include "../util/macros.h"
+
+# define m4_identity glms_mat4_identity
+
+# define cam_ortho glms_ortho
 
 typedef vec2s	v2;
 typedef ivec2s	v2i;
@@ -13,6 +19,7 @@ typedef vec3s	v3;
 typedef ivec3s	v3i;
 typedef vec4s	v4;
 typedef ivec4s	v4i;
+typedef mat4s	m4;
 
 # define _V2OF2(x, y) ((v2){{ x, y }})
 # define _V2OF1(xy)	({ float _xy = (xy); ((v2){{ _xy, _xy }}); })

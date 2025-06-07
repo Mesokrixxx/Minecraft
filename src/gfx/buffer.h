@@ -10,6 +10,7 @@ typedef enum {
 	BUFFER_ARRAY,
 	BUFFER_ELEMENT_ARRAY,
 	BUFFER_VERTEX_ARRAY,
+	BUFFER_UNIFORM,
 	BUFFER_TYPE_COUNT,
 }	buffer_type_e;
 
@@ -43,6 +44,7 @@ void	buffer_subdata(buffer_t *buffer, size_t offset, size_t size, const void *da
 void	buffer_destroy(buffer_t *buffer);
 void	buffer_bind(buffer_t buffer);
 bool	buffer_valid(buffer_t buffer);
+void	buffer_bindpoint_assign(buffer_t buffer, unsigned int *bind_point);
 
 # define _BUFCREATE3(buffer_ptr, type, usage) _buffer_create(buffer_ptr, type, usage)
 # define _BUFCREATE2(buffer_ptr, type) _buffer_create(buffer_ptr, type, BUFFER_NULL_USAGE)

@@ -86,3 +86,14 @@ bool	shader_valid(shader_t shader)
 
 	return true;
 }
+
+void	shader_uniform_setbindpoint(shader_t shader, const char *uniformname, unsigned int bindpoint)
+{
+	unsigned int blockindex;
+
+	blockindex = glGetUniformBlockIndex(shader.program, uniformname);
+	ASSERT(blockindex != GL_INVALID_INDEX,
+		"Failed to found %s", uniformname);
+
+	glUniformBlockBinding(shader.program, blockindex, bindpoint);
+}

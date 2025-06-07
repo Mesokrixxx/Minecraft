@@ -4,6 +4,7 @@
 # include "shader.h"
 # include "buffer.h"
 # include "pipeline.h"
+# include "color.h"
 
 # ifndef GLAPIENTRY
 #  define GLAPIENTRY
