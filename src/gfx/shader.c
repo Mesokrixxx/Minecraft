@@ -7,18 +7,22 @@
 
 static void shader_compile(unsigned int *shader, const char *data, unsigned int shadertype)
 {
-	*shader = glCreateShader(shadertype);
-	glShaderSource(*shader, 1, &data, NULL);
-	glCompileShader(*shader);
+	unsigned int new_shader;
+
+	new_shader = glCreateShader(shadertype);
+	glShaderSource(new_shader, 1, &data, NULL);
+	glCompileShader(new_shader);
 
 	int  success;
 	char infoLog[512];
-	glGetShaderiv(*shader, GL_COMPILE_STATUS, &success);
+	glGetShaderiv(new_shader, GL_COMPILE_STATUS, &success);
 	if (!success)
 	{
-		glGetShaderInfoLog(*shader, 512, NULL, infoLog);
+		glGetShaderInfoLog(new_shader, 512, NULL, infoLog);
 		ASSERT(false, "Error log: %s", infoLog);
 	}
+
+	*shader = new_shader;
 }
 
 void	shader_create(shader_t *shader, const char *vertsource_path, const char *fragsource_path)
@@ -33,7 +37,7 @@ void	shader_create(shader_t *shader, const char *vertsource_path, const char *fr
 	char *fragsource = file_get(fragsource_path);
 
 	shader_compile(&vertex_shader, vertsource, GL_VERTEX_SHADER);
-	shader_compile(&vertex_shader, fragsource, GL_FRAGMENT_SHADER);
+	shader_compile(&fragment_shader, fragsource, GL_FRAGMENT_SHADER);
 
 	program = glCreateProgram();
 	glAttachShader(program, vertex_shader);

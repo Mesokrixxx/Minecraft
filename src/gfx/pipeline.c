@@ -1,0 +1,89 @@
+#include "pipeline.h"
+
+#include "../util/assert.h"
+
+#include <stdlib.h>
+
+typedef enum {
+	PIPELINE_MAX_VERTEX_ATTRIB_COUNT,
+	PIPELINE_LIMIT_COUNT,
+}	pipeline_limit_e;
+
+static int pipeline_limits_get[PIPELINE_LIMIT_COUNT];
+
+static bool pipeline_limits_set;
+static void pipeline_limits_init()
+{
+	if (pipeline_limits_set)
+		return ;
+	pipeline_limits_set = true;
+
+	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &pipeline_limits_get[PIPELINE_MAX_VERTEX_ATTRIB_COUNT]);
+}
+
+void	pipeline_create(pipeline_t *pipeline, shader_t shader, int buffer_count, pipeline_buffers_desc *buffers_desc)
+{
+	*pipeline = (pipeline_t){
+		.buffer_count = buffer_count,
+		.shader = shader,
+	};
+
+	buffer_create(&pipeline->vao, BUFFER_VERTEX_ARRAY);
+	pipeline->buffers = malloc(sizeof(*pipeline->buffers) * buffer_count);
+	for (int i = 0; i < buffer_count; i++)
+	{
+		buffer_create(&pipeline->buffers[i].buffer, buffers_desc[i].type, buffers_desc[i].usage);
+		buffer_data(&pipeline->buffers[i].buffer, buffers_desc[i].size, buffers_desc[i].data);
+		pipeline->buffers[i].stride = buffers_desc[i].stride;
+	}
+}
+
+void	pipeline_destroy(pipeline_t *pipeline)
+{
+	for (int i = 0; i < pipeline->buffer_count; i++)
+		buffer_destroy(&pipeline->buffers[i].buffer);
+	free(pipeline->buffers);
+	buffer_destroy(&pipeline->vao);
+
+	*pipeline = (pipeline_t){0};
+}
+
+void	pipeline_bind(pipeline_t pipeline)
+{
+	shader_bind(pipeline.shader);
+	buffer_bind(pipeline.vao);
+}
+
+bool	pipeline_valid(pipeline_t pipeline)
+{
+	if (!buffer_valid(pipeline.vao) || !shader_valid(pipeline.shader))
+		return false;
+
+	for (int i = 0; i < pipeline.buffer_count; i++)
+		if (!buffer_valid(pipeline.buffers[i].buffer))
+			return false;
+
+	return true;
+}
+
+void	pipeline_assign_attributes(pipeline_t *pipeline, int attributes_count, pipeline_attributes_desc *attributes)
+{
+	pipeline_limits_init();
+
+	ASSERT(attributes_count < pipeline_limits_get[PIPELINE_MAX_VERTEX_ATTRIB_COUNT],
+		"Reached max vertex attribs per pipeline (limit: %s)",
+		pipeline_limits_get[PIPELINE_MAX_VERTEX_ATTRIB_COUNT]);
+
+	for (unsigned int i = 0; i < attributes_count; i++)
+	{
+		buffer_bind(pipeline->buffers[attributes[i].buffer_index].buffer);
+
+		glEnableVertexAttribArray(i);
+		glVertexAttribPointer(i, 
+			attributes[i].size,
+			attributes[i].datatype,
+			attributes[i].normalized ? GL_TRUE : GL_FALSE,
+			pipeline->buffers[attributes[i].buffer_index].stride,
+			(void*)attributes[i].offset);
+	}
+}
