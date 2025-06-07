@@ -39,6 +39,10 @@ int main() {
 
 	ASSERT(glewInit() == GLEW_OK);
 
+	shader_t shader;
+	shader_create(&shader, "res/shaders/sprite.vert", "res/shaders/sprite.frag");
+	ASSERT(shader_valid(shader));
+
 	game.running = true;
 	while (game.running)
 	{
@@ -57,6 +61,8 @@ int main() {
 
 		SDL_GL_SwapWindow(game.window);
 	}
+
+	shader_destroy(&shader);
 
 	SDL_GL_DeleteContext(game.glcontext);
 	SDL_DestroyWindow(game.window);

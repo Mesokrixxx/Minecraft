@@ -4,6 +4,7 @@
 # include "macros.h"
 
 # include <stdio.h>
+# include <stdlib.h>
 
 # define _ASSERTX(cond, expr, fmt, ...) \
 	do { \
