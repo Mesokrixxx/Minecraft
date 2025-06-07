@@ -4,7 +4,7 @@ W64DEVKIT_PATH = C:/w64devkit
 
 ifeq ($(OS), Windows_NT)
 	BIN = $(NAME).exe
-	CFLAGS = -I$(W64DEVKIT_PATH)/include
+	CFLAGS = -I$(W64DEVKIT_PATH)/include -D_WINDOWS_
 	LFLAGS = -L$(W64DEVKIT_PATH)/lib -lSDL2 -lglew32 -lopengl32 -lcglm
 else
 
