@@ -49,7 +49,7 @@ bool	buffer_valid(buffer_t buffer);
 /**
  * buffer_ptr
  * type
- * usage (optional, default: BUFFER_NULL_USAGE)
+ * usage (default: BUFFER_NULL_USAGE)
  **/
 # define buffer_create(...) VMACRO(_BUFCREATE, __VA_ARGS__)
 

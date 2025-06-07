@@ -87,3 +87,35 @@ void	pipeline_assign_attributes(pipeline_t *pipeline, int attributes_count, pipe
 			(void*)attributes[i].offset);
 	}
 }
+
+void	pipeline_render_setup(pipeline_t *pipeline, pipeline_render_method_desc render_method)
+{
+	pipeline->render.method = render_method.method;
+	pipeline->render.type = render_method.type;
+	pipeline->render.e_count = render_method.element_count;
+	pipeline->render.e_type = render_method.element_type;
+}
+
+void	_pipeline_render(pipeline_t pipeline, unsigned int count, size_t offset)
+{
+	ASSERT(pipeline.render.method,
+		"Render method not set for pipeline.");
+
+	switch (pipeline.render.method) {
+		case (PIPELINE_ARRAYS):
+			glDrawArrays(pipeline.render.type, offset, count);
+			break ;
+		case (PIPELINE_ELEMENTS):
+			glDrawElements(
+				pipeline.render.type, pipeline.render.e_count, 
+				pipeline.render.e_type, (void*)offset);
+			break ;
+		case (PIPELINE_ELEMENTS_INSTANCED):
+			glDrawElementsInstanced(
+				pipeline.render.type, pipeline.render.e_count,
+				pipeline.render.e_type, (void*)offset, count);
+			break ;
+		default:
+			ASSERT(false, "unknow render method");
+	};
+}

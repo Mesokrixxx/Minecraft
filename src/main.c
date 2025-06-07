@@ -48,7 +48,7 @@ int main() {
 	shader_create(&shader, "res/shaders/sprite.vert", "res/shaders/sprite.frag");
 	ASSERT(shader_valid(shader));
 
-	unsigned int indices[] = {0, 1, 2, 2, 3, 0};
+	unsigned short indices[] = {0, 1, 2, 2, 3, 0};
 	float vertices[] = {
 		-0.5, 0.5,
 		0.5, 0.5,
@@ -83,6 +83,13 @@ int main() {
 				.offset = 0,
 			}
 		});
+	pipeline_render_setup(&pip, 
+		(pipeline_render_method_desc){
+			.method = PIPELINE_ELEMENTS,
+			.type = PIPELINE_TRIANGLES,
+			.element_count = 6,
+			.element_type = PIPELINE_UNSIGNED_SHORT,
+		});
 	ASSERT(pipeline_valid(pip));
 
 	game.running = true;
@@ -101,8 +108,7 @@ int main() {
 		glClearColor(0, 0, 0, 0);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		pipeline_bind(pip);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		pipeline_render(pip);
 
 		SDL_GL_SwapWindow(game.window);
 	}
