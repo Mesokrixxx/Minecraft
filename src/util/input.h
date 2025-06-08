@@ -4,6 +4,7 @@
 # include "sparseset.h"
 # include "dynlist.h"
 # include "../math/aliases.h"
+# include "../gfx/window.h"
 
 # include <stdbool.h>
 # include <SDL2/SDL_scancode.h>
@@ -34,8 +35,7 @@ typedef struct {
 }	input_infos_t;
 
 typedef struct {
-	SDL_Window *window;
-	v2i window_size;
+	window_t *window;
 
 	double now;
 
@@ -49,10 +49,10 @@ typedef struct {
 	dynlist_t clear;
 }	input_manager_t;
 
-void	input_manager_create(input_manager_t *im, SDL_Window *window);
+void	input_manager_create(input_manager_t *im, window_t *window);
 void	input_manager_destroy(input_manager_t *im);
 input_infos_t input_manager_infos(input_manager_t im, unsigned int input);
-void	input_manager_update(input_manager_t *im, double now, v2i window_size);
+void	input_manager_update(input_manager_t *im, double now);
 void	input_manager_process(input_manager_t *im, SDL_Event *ev);
 void	input_manager_mouse_grab(input_manager_t *im);
 

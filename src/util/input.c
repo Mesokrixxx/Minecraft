@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-void	input_manager_create(input_manager_t *im, SDL_Window *window)
+void	input_manager_create(input_manager_t *im, window_t *window)
 {
 	*im = (input_manager_t){
 		.window = window,
@@ -33,10 +33,9 @@ input_infos_t input_manager_infos(input_manager_t im, unsigned int input)
 	return infos ? *infos : (input_infos_t){0};
 }
 
-void	input_manager_update(input_manager_t *im, double now, v2i window_size)
+void	input_manager_update(input_manager_t *im, double now)
 {
 	im->now = now;
-	im->window_size = window_size;
 
 	im->mouse.motion = v2i_of(0);
 	im->mouse.scroll = v2_of(0);
@@ -57,7 +56,7 @@ void	input_manager_process(input_manager_t *im, SDL_Event *ev)
 					im->mouse.motion,
 					v2i_of(ev->motion.xrel, -ev->motion.yrel));
 			im->mouse.pos = 
-				v2i_of(ev->motion.x, im->window_size.y - ev->motion.y - 1);
+				v2i_of(ev->motion.x, im->window->size.y - ev->motion.y - 1);
 			break ;
 		case (SDL_MOUSEWHEEL):
 			im->mouse.scroll = 
@@ -143,7 +142,7 @@ void	input_manager_mouse_grab(input_manager_t *im)
 	im->mouse.grab = !im->mouse.grab;
 
 	SDL_SetWindowMouseGrab(
-		im->window, im->mouse.grab ? SDL_TRUE : SDL_FALSE);
+		im->window->window, im->mouse.grab ? SDL_TRUE : SDL_FALSE);
 	SDL_ShowCursor(im->mouse.grab ? SDL_FALSE : SDL_TRUE);
 	SDL_SetRelativeMouseMode(im->mouse.grab ? SDL_TRUE : SDL_FALSE);
 }

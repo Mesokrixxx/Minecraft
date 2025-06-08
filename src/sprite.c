@@ -234,7 +234,7 @@ void	sprite_manager_register(sprite_manager_t *manager, unsigned int *sprite_atl
 		(texture_sampler_desc){
 			.wrap_u = TEXTURE_CLAMP_TO_EDGE,
 			.wrap_v = TEXTURE_CLAMP_TO_EDGE,
-			.min_filter = TEXTURE_NEAREST_MIPMAP_NEAREST,
+			.min_filter = TEXTURE_NEAREST,
 			.max_filter = TEXTURE_NEAREST,
 		});
 
