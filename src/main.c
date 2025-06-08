@@ -60,7 +60,25 @@ int main() {
 	buffer_create(&game.vs_params_ubo.buffer, BUFFER_UNIFORM, BUFFER_DYNAMIC_DRAW);
 	buffer_data(&game.vs_params_ubo.buffer, sizeof(vs_params_t), NULL);
 	buffer_bindpoint_assign(game.vs_params_ubo.buffer, &game.vs_params_ubo.bind_point);
+	ASSERT(buffer_valid(game.vs_params_ubo.buffer));
+
 	sprite_manager_create(&game.sprite_manager, game.vs_params_ubo.bind_point);
+
+	unsigned int tiles_atlas, font_atlas;
+	sprite_manager_register(&game.sprite_manager, &tiles_atlas, 
+		(sprite_atlas_desc){
+			.path = "res/textures/tiles.png",
+			.sprite_size = v2i_of(8),
+			.format = SPRITE_RGBA,
+			.internal_format = SPRITE_RGBA,
+		});
+	sprite_manager_register(&game.sprite_manager, &font_atlas,
+		(sprite_atlas_desc){
+			.path = "res/textures/font.png",
+			.sprite_size = v2i_of(8),
+			.format = SPRITE_RGBA,
+			.internal_format = SPRITE_RGBA,
+		});
 
 	m4 identity = m4_identity();
 	m4 proj = cam_ortho(0, game.size.x, game.size.y, 0, 1, -1);
@@ -87,13 +105,24 @@ int main() {
 		memcpy(params.proj, &proj, sizeof(proj));
 		buffer_subdata(&game.vs_params_ubo.buffer, 0, sizeof(vs_params_t), &params);
 
-		for (int i = 0; i < 100; i++)
-			sprite_manager_push(&game.sprite_manager, 
-				(sprite_t){
-					.color = color_of(255),
-					.z = 0,
-					.pos = v2_of(50 + i * 2, 50 + i),
-				});
+		sprite_manager_push(&game.sprite_manager, 
+			(sprite_t){
+				.tex_atlas = tiles_atlas,
+				.color = color_of(255),
+				.z = 0,
+				.pos = v2_of(50, 50),
+				.index = v2i_of(0),
+				.scale = v2_of(4),
+			});
+		sprite_manager_push(&game.sprite_manager, 
+			(sprite_t){
+				.tex_atlas = font_atlas,
+				.color = color_of(255),
+				.z = 0,
+				.pos = v2_of(200, 200),
+				.index = v2i_of(0),
+				.scale = v2_of(4),
+			});
 		sprite_manager_draw(&game.sprite_manager);
 
 		SDL_GL_SwapWindow(game.window);

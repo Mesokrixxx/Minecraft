@@ -97,3 +97,14 @@ void	shader_uniform_setbindpoint(shader_t shader, const char *uniformname, unsig
 
 	glUniformBlockBinding(shader.program, blockindex, bindpoint);
 }
+
+void	shader_uniform_loc(shader_t shader, const char *uniformname, unsigned int *loc)
+{
+	unsigned int uIndex;
+
+	uIndex = glGetUniformLocation(shader.program, uniformname);
+	ASSERT(uIndex != GL_INVALID_INDEX,
+		"Failed to found %s", uniformname);
+
+	*loc = uIndex;
+}

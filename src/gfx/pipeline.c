@@ -84,12 +84,25 @@ void	pipeline_attributes_assign(pipeline_t *pipeline, int attributes_count, pipe
 		buffer_bind(pipeline->buffers[buf_index].buffer);
 
 		glEnableVertexAttribArray(i);
-		glVertexAttribPointer(i,
-			attributes[i].size,
-			attributes[i].datatype,
-			attributes[i].normalized ? GL_TRUE : GL_FALSE,
-			pipeline->buffers[buf_index].stride,
-			(void*)attributes[i].offset);
+		switch (attributes[i].datatype) {
+			case (BUFFER_FLOAT):
+				glVertexAttribPointer(i,
+					attributes[i].size,
+					attributes[i].datatype,
+					attributes[i].normalized ? GL_TRUE : GL_FALSE,
+					pipeline->buffers[buf_index].stride,
+					(void*)attributes[i].offset);
+				break ;
+			case (BUFFER_INT):
+				glVertexAttribIPointer(i,
+					attributes[i].size,
+					attributes[i].datatype,
+					pipeline->buffers[buf_index].stride,
+					(void*)attributes[i].offset);
+				break ;
+			default:
+				ASSERT("unknow buffer datatype");
+		}
 		glVertexAttribDivisor(i, pipeline->buffers[buf_index].steptype);
 	}
 }

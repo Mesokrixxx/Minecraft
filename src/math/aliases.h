@@ -2,12 +2,23 @@
 # define MATH_ALIASES_H
 
 # include <cglm/struct/vec2.h>
+# include <cglm/struct/ivec2.h>
 # include <cglm/struct/vec3.h>
+# include <cglm/struct/ivec3.h>
 # include <cglm/struct/vec4.h>
+# include <cglm/struct/ivec4.h>
 # include <cglm/struct/mat4.h>
 # include <cglm/struct/cam.h>
 
 # include "../util/macros.h"
+
+# define v2_add glms_vec2_add
+# define v2_mul glms_vec2_mul
+# define v2_div glms_vec2_div
+
+# define v2i_add glms_ivec2_add
+# define v2i_mul glms_ivec2_mul
+# define v2i_div glms_ivec2_div
 
 # define m4_identity glms_mat4_identity
 
@@ -25,11 +36,13 @@ typedef mat4s	m4;
 # define _V2OF1(xy)	({ float _xy = (xy); ((v2){{ _xy, _xy }}); })
 # define _V2OF0() ((v2){{ 0, 0 }})
 # define v2_of(...) VMACRO(_V2OF, __VA_ARGS__)
+# define v2_from_v(v) ({ __typeof__(v) _v = (v); ((v2){{ _v.x, _v.y }}); })
 
 # define _V2IOF2(x, y) ((v2i){{ x, y }})
 # define _V2IOF1(xy) ({ int _xy = (xy); ((v2i){{ _xy, _xy }}); })
 # define _V2IOF0() ((v2i){{ 0, 0 }})
 # define v2i_of(...) VMACRO(_V2IOF, __VA_ARGS__)
+# define v2i_from_v(v) ({ __typeof__(v) _v = (v); ((v2i){{ _v.x, _v.y }}); })
 
 # define _V3OF3(x, y, z) ((v3){{ x, y, z }})
 # define _V3OF2(v2, z) ({ __typeof__(v2) _v2 = (v2); ((v3){{ _v2.x, _v2.y, z }}); })
@@ -53,7 +66,7 @@ typedef mat4s	m4;
 # define _V4IOF4(x, y, z, w) ((v4i){{ x, y, z, w }})
 # define _V4IOF3(v2, z, w) ({ __typeof__(v2) _v2 = (v2); ((v4i){{ _v2.x, _v2.y, z, w }}); })
 # define _V4IOF2(v3, w) ({ __typeof__(v3) _v3 = (v3); ((v4i){{ _v3.x, _v3.y, _v3.z, w }}); })
-# define _V4IOF1(xyzw) ({ float _xyzw = (xyzw); ((v4i){{ _xyzw, _xyzw, _xyzw, _xyzw }}); })
+# define _V4IOF1(xyzw) ({ int _xyzw = (xyzw); ((v4i){{ _xyzw, _xyzw, _xyzw, _xyzw }}); })
 # define _V4IOF0() ((v4i){{ 0, 0, 0, 0 }})
 # define v4i_of(...) VMACRO(_V4IOF, __VA_ARGS__)
 

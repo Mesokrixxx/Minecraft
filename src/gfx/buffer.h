@@ -28,6 +28,7 @@ typedef enum {
 
 typedef enum {
 	BUFFER_FLOAT = GL_FLOAT,
+	BUFFER_INT = GL_INT,
 }	buffer_datatype_e;
 
 typedef struct {

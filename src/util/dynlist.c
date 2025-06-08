@@ -24,7 +24,7 @@ void	dynlist_append(dynlist_t *list, void *data)
 	if (list->size == list->capacity)
 	{
 		list->capacity *= 2;
-		list->data = realloc(list->data, list->capacity);
+		list->data = realloc(list->data, list->capacity * list->data_size);
 	}
 
 	memcpy((char*)list->data + list->size * list->data_size, data, list->data_size);
