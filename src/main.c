@@ -28,6 +28,7 @@ typedef struct {
 		unsigned int bind_point;
 	}	vs_params_ubo;
 	sprite_manager_t sprite_manager;
+	input_manager_t input_manager;
 	bool running;
 }	instance_t;
 
@@ -80,21 +81,42 @@ int main() {
 			.internal_format = SPRITE_RGBA,
 		});
 
+	input_manager_create(&game.input_manager, game.window);
+
 	m4 identity = m4_identity();
-	m4 proj = cam_ortho(0, game.size.x, game.size.y, 0, 1, -1);
+	m4 proj = cam_ortho(0, game.size.x, 0, game.size.y, 1, -1);
 
 	game.running = true;
 	while (game.running)
 	{
-		SDL_Event ev;
+		static double last, accumulated_time;
+		double now = time_s();
+		double delta = now - last;
+		last = now;
 
-		while (SDL_PollEvent(&ev)) {
-			switch (ev.type) {
-				case (SDL_QUIT):
-					game.running = false;
-					break ;
-			}
+		accumulated_time += delta;
+		if (accumulated_time >= 1)
+		{
+			printf("FPS: %u\n", 1.0 / delta);
+			accumulated_time = 0;
 		}
+
+		input_manager_update(&game.input_manager, now, game.size);
+
+		SDL_Event ev;
+		while (SDL_PollEvent(&ev)) {
+			if (ev.type == SDL_QUIT)
+				game.running = false;
+			else
+				input_manager_process(&game.input_manager, &ev);
+		}
+
+		unsigned char state = input_manager_get(game.input_manager, SDL_SCANCODE_A);
+		double laststatechange = input_manager_last(game.input_manager, SDL_SCANCODE_A);
+		if (state & INPUT_PRESSED)
+			printf("PRESSED A (lastupdate: %f)\n", laststatechange);
+		if (state & INPUT_RELEASED)
+			printf("RELEASED A (lastupdate: %f)\n", laststatechange);
 
 		glClearColor(0, 0, 0, 0);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -128,6 +150,7 @@ int main() {
 		SDL_GL_SwapWindow(game.window);
 	}
 
+	input_manager_destroy(&game.input_manager);
 	sprite_manager_destroy(&game.sprite_manager);
 	buffer_destroy(&game.vs_params_ubo.buffer);
 

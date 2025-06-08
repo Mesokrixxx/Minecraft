@@ -32,4 +32,13 @@ static inline void *dynlist_data(dynlist_t l) {
 	return l.data;
 }
 
+# define dynlist_foreach(list_ptr, ...) \
+	do { \
+		dynlist_t *l = list_ptr; \
+		for (int index = 0; index < l->size; index++) { \
+			void *data = (char*)l->data + index * l->data_size; \
+			__VA_ARGS__ \
+		}; \
+	}	while (0);
+
 #endif
