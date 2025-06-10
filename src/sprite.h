@@ -1,9 +1,11 @@
 #ifndef SPRITE_H
 # define SPRITE_H
 
-# include "gfx/gfx.h"
-# include "util/util.h"
-# include "math/math.h"
+# include "gfx/color.h"
+# include "gfx/texture.h"
+# include "gfx/pipeline.h"
+# include "math/aliases.h"
+# include "util/dynlist.h"
 
 typedef struct {
 	unsigned int tex_atlas;

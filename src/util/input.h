@@ -49,17 +49,18 @@ typedef struct {
 	dynlist_t clear;
 }	input_manager_t;
 
+static inline bool	input_manager_valid(int input)
+{
+	return (input >= 0 && input < INPUT_HANDLED_COUNT);
+}
+
 void	input_manager_create(input_manager_t *im, window_t *window);
 void	input_manager_destroy(input_manager_t *im);
-input_infos_t input_manager_infos(input_manager_t im, unsigned int input);
+unsigned char input_manager_get(input_manager_t im, int input);
+double input_manager_last(input_manager_t im, int input);
+input_infos_t input_manager_infos(input_manager_t im, int input);
 void	input_manager_update(input_manager_t *im, double now);
 void	input_manager_process(input_manager_t *im, SDL_Event *ev);
 void	input_manager_mouse_grab(input_manager_t *im);
-
-# define input_manager_get(imanager, input) \
-	input_manager_infos(imanager, input).state
-
-# define input_manager_last(imanager, input) \
-	input_manager_infos(imanager, input).last
 
 #endif

@@ -1,4 +1,9 @@
 *.o
 Minecraft
 Minecraft.exe
+
+# vscode
 .vscode
+
+# clangd
+.clangd

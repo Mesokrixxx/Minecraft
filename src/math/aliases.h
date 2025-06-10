@@ -13,6 +13,7 @@
 # include "../util/macros.h"
 
 # define v2_add glms_vec2_add
+# define v2_sub glms_vec2_sub
 # define v2_mul glms_vec2_mul
 # define v2_div glms_vec2_div
 
@@ -20,9 +21,16 @@
 # define v2i_mul glms_ivec2_mul
 # define v2i_div glms_ivec2_div
 
+# define v3_add glms_vec3_add
+# define v3_normalize glms_vec3_normalize
+# define v3_cross glms_vec3_cross
+# define v3_scale glms_vec3_scale
+
 # define m4_identity glms_mat4_identity
 
 # define cam_ortho glms_ortho
+# define cam_lookat glms_lookat
+# define cam_perspective glms_perspective
 
 typedef vec2s	v2;
 typedef ivec2s	v2i;

@@ -9,6 +9,13 @@ typedef struct {
 
 void	window_create(window_t *window, window_desc window_param)
 {
+	bool no_fbo = false;
+
+	if (!window_param.resolution.x && !window_param.resolution.y) {
+		window_param.resolution = window_param.size;
+		no_fbo = true;
+	}
+
 	*window = (window_t){
 		.size = window_param.size,
 		.resolution = window_param.resolution,
@@ -38,6 +45,10 @@ void	window_create(window_t *window, window_desc window_param)
 
 	ASSERT(glewInit() == GLEW_OK, "failed to load glew");
 
+	if (no_fbo)
+		return ;
+
+	window->window_fbo = true;
 	buffer_create(&window->framebuf, BUFFER_FRAME);
 
 	shader_create(&window->fboshader, window_param.sh_vertsource, window_param.sh_fragsource);
@@ -129,10 +140,12 @@ void	window_create(window_t *window, window_desc window_param)
 
 void	window_destroy(window_t *window)
 {
-	pipeline_destroy(&window->pipeline);
-	shader_destroy(&window->fboshader);
-	buffer_destroy(&window->renderbuf);
-	buffer_destroy(&window->framebuf);
+	if (window->window_fbo) {
+		pipeline_destroy(&window->pipeline);
+		shader_destroy(&window->fboshader);
+		buffer_destroy(&window->renderbuf);
+		buffer_destroy(&window->framebuf);
+	}
 
 	SDL_GL_DeleteContext(window->glcontext);
 	SDL_DestroyWindow(window->window);
@@ -142,8 +155,10 @@ void	window_destroy(window_t *window)
 
 void	window_update(window_t *window)
 {
-	buffer_bind(window->framebuf);
-	glViewport(0, 0, window->resolution.x, window->resolution.y);
+	if (window->window_fbo) {
+		buffer_bind(window->framebuf);
+		glViewport(0, 0, window->resolution.x, window->resolution.y);
+	}
 
 	glClearColor(
 		window->bg_col.r, window->bg_col.g,
@@ -156,11 +171,13 @@ void	window_commit(window_t *window)
 	buffer_bind((buffer_t){ .type = BUFFER_FRAME, .id = 0 });
 	glViewport(0, 0, window->size.x, window->size.y);
 
-	glClearColor(1, 1, 1, 1);
-	glClear(GL_COLOR_BUFFER_BIT);
+	if (window->window_fbo) {
+		glClearColor(1, 1, 1, 1);
+		glClear(GL_COLOR_BUFFER_BIT);
 
-	pipeline_bind(window->pipeline);
-	pipeline_render(window->pipeline);
+		pipeline_bind(window->pipeline);
+		pipeline_render(window->pipeline);
+	}
 
 	SDL_GL_SwapWindow(window->window);
 }

@@ -1,5 +1,7 @@
 #include "input.h"
 
+#include "assert.h"
+
 #include <stdio.h>
 
 void	input_manager_create(input_manager_t *im, window_t *window)
@@ -26,11 +28,29 @@ void	input_manager_destroy(input_manager_t *im)
 	*im = (input_manager_t){0};
 }
 
-input_infos_t input_manager_infos(input_manager_t im, unsigned int input)
+unsigned char input_manager_get(input_manager_t im, int input)
 {
+	ASSERT(input_manager_valid(input),
+		"unknow input");
+
+	return (input_manager_infos(im, input).state);
+}
+
+double input_manager_last(input_manager_t im, int input)
+{
+	ASSERT(input_manager_valid(input),
+		"unknow input");
+
+	return (input_manager_infos(im, input).last);
+}
+
+input_infos_t input_manager_infos(input_manager_t im, int input)
+{
+	ASSERT(input_manager_valid(input),
+		"unknow input");
+
 	input_infos_t *infos = sparseset_get(&im.inputs, input);
-	
-	return infos ? *infos : (input_infos_t){0};
+	return *infos;
 }
 
 void	input_manager_update(input_manager_t *im, double now)
@@ -49,6 +69,8 @@ void	input_manager_update(input_manager_t *im, double now)
 
 void	input_manager_process(input_manager_t *im, SDL_Event *ev)
 {
+	int code;
+
 	switch (ev->type) {
 		case (SDL_MOUSEMOTION):
 			im->mouse.motion = 
@@ -66,7 +88,6 @@ void	input_manager_process(input_manager_t *im, SDL_Event *ev)
 		case (SDL_MOUSEBUTTONUP):
 		case (SDL_KEYDOWN):
 		case (SDL_KEYUP):
-			int code;
 			bool down, repeat = false;
 
 			if (ev->type == SDL_KEYDOWN

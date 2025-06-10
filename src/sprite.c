@@ -5,6 +5,7 @@
 #endif
 
 #include <stb/stb_image.h>
+#include "util/assert.h"
 
 #define SPRITE_MAXCOUNT_PER_FRAME 65356
 #define SPRITE_TEXATLAS_MAX_COUNT 8 // See sprite.frag
@@ -274,5 +275,5 @@ void	sprite_manager_register(sprite_manager_t *manager, unsigned int *sprite_atl
 	*sprite_atlas_index = manager->atlascount;
 	manager->atlascount++;
 
-	glUniform1iv(manager->atlasloc, manager->atlascount, atlasbps);
+	glUniform1iv(manager->atlasloc, manager->atlascount, (const int *)atlasbps);
 }

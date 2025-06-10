@@ -39,7 +39,7 @@ void	_sparseset_add(sparseset_t *ss, void *data, int id)
 			new_cap = id + 1;
 		ss->sparse_cap = new_cap;
 		ss->sparse = realloc(ss->sparse, new_cap * sizeof(int));
-		memset(ss->sparse + offset * sizeof(int), -1, (new_cap - offset) * sizeof(int));
+		memset(((char *)ss->sparse + offset * sizeof(int)), -1, (new_cap - offset) * sizeof(int));
 	}
 
 	if (ss->size >= ss->capacity)
@@ -51,7 +51,7 @@ void	_sparseset_add(sparseset_t *ss, void *data, int id)
 
 	ss->sparse[id] = ss->size;
 	ss->dense[ss->size] = id;
-	memcpy((char*)ss->data + ss->size * ss->datasize, data, ss->datasize);
+	memcpy(((char*)ss->data + ss->size * ss->datasize), data, ss->datasize);
 	ss->size++;
 }
 
@@ -68,8 +68,8 @@ void	sparseset_remove(sparseset_t *ss, int id)
 		ss->sparse[last_id] = index;
 		ss->dense[index] = last_id;
 		memcpy(
-			(char*)ss->data + index * ss->datasize, 
-			(char*)ss->data + (ss->size - 1) * ss->datasize, 
+			((char*)ss->data + index * ss->datasize), 
+			((char*)ss->data + (ss->size - 1) * ss->datasize), 
 			ss->datasize);
 	}
 
@@ -80,7 +80,7 @@ void	sparseset_remove(sparseset_t *ss, int id)
 void	*sparseset_get(sparseset_t *ss, int id)
 {
 	if (sparseset_contains(*ss, id))
-		return (char*)ss->data + ss->sparse[id] * ss->datasize;
+		return ((char*)ss->data + ss->sparse[id] * ss->datasize);
 	return NULL;
 }
 

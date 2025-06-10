@@ -1,24 +1,26 @@
+#include <SDL2/SDL_scancode.h>
 #ifdef _WINDOWS_
 # define SDL_MAIN_HANDLED
 #endif
 
-#define DEFAULT_FPS 200
+#define DEFAULT_FPS 240
 #define DEFAULT_TPS 60
 
 #define DEFAULT_WINDOW_SIZEX 1080
 #define DEFAULT_WINDOW_SIZEY 720
-#define DEFAULT_WINDOW_RESX 320
-#define DEFAULT_WINDOW_RESY 180
 
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
 #include <stdio.h>
 #include <stdbool.h>
 
-#include "math/math.h"
+#include "gfx/window.h"
 #include "gfx/gfx.h"
-#include "util/util.h"
-
+#include "util/input.h"
+#include "util/assert.h"
+#include "util/time.h"
+#include "util/camera.h"
+#include "math/vars.h"
 #include "sprite.h"
 
 typedef struct {
@@ -29,6 +31,7 @@ typedef struct {
 
 typedef struct {
 	window_t window;
+	camera_t camera;
 
 	m4 view, proj;
 	
@@ -44,11 +47,11 @@ typedef struct {
 	input_manager_t input_manager;
 
 	struct {
-		double now, delta;
+		double now, delta_frame, delta_tick;
 
 		unsigned int FPS, aimedFPS, render;
 		unsigned int TPS, aimedTPS, tick;
-		double dtFPS, dtTPS;
+		double aimedDTFrame, aimedDTTick;
 	} time;
 	
 	bool running;
@@ -58,7 +61,7 @@ void setFPS(instance_t *game, unsigned int FPS)
 {
 	game->time.aimedFPS = FPS;
 	if (FPS > 0)
-		game->time.dtFPS = 1.0 / FPS;
+		game->time.aimedDTFrame = 1.0 / FPS;
 }
 
 void setTPS(instance_t *game, unsigned int TPS)
@@ -69,7 +72,7 @@ void setTPS(instance_t *game, unsigned int TPS)
 	}
 
 	game->time.aimedTPS = TPS;
-	game->time.dtTPS = 1.0 / TPS;
+	game->time.aimedDTTick = 1.0 / TPS;
 }
 
 void init(instance_t *game)
@@ -79,7 +82,6 @@ void init(instance_t *game)
 	window_create(&game->window, 
 		(window_desc){
 			.size = v2i_of(DEFAULT_WINDOW_SIZEX, DEFAULT_WINDOW_SIZEY),
-			.resolution = v2i_of(DEFAULT_WINDOW_RESX, DEFAULT_WINDOW_RESY),
 			.title = "Minecraft",
 			.centered = true,
 			.flags = SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE,
@@ -116,8 +118,16 @@ void init(instance_t *game)
 	input_manager_create(&game->input_manager, &game->window);
 
 	game->vs_params_ubo.model = m4_identity();
-	game->view = m4_identity();
-	game->proj = cam_ortho(0, game->window.resolution.x, 0, game->window.resolution.y, 1, -1);
+	camera_init(&game->camera, 
+		(camera_desc){
+			.window = &game->window,
+			.type = CAMERA_PERSPECTIVE,
+			.znear = 0.01,
+			.zfar = 1000.0,
+			.perspective = (camera_perspective_desc){
+				.fov = rad(75.0),
+			}
+		});
 
 	setFPS(game, DEFAULT_FPS);
 	setTPS(game, DEFAULT_TPS);
@@ -138,32 +148,49 @@ void update(instance_t *game)
 		{
 			game->window.size = 
 				v2i_of(ev.window.data1, ev.window.data2);
-			// game->proj = cam_ortho(0, game->window.size.x, 0, game->window.size.y, 1, -1);
 		}
 		else
 			input_manager_process(&game->input_manager, &ev);
 	}
+
+	if (input_manager_get(game->input_manager, SDL_SCANCODE_ESCAPE) & INPUT_PRESSED)
+		input_manager_mouse_grab(&game->input_manager);
+
+	camera_update(&game->camera);
+
+	game->camera.persp.pitch += game->input_manager.mouse.motion.y / 1000.0;
+	game->camera.persp.yaw -= game->input_manager.mouse.motion.x / 1000.0;
 }
 
 void tick(instance_t *game)
 {
+	float camspeed = 500.0 * game->time.delta_tick;
 
+	if (input_manager_get(game->input_manager, SDL_SCANCODE_W) & INPUT_DOWN)
+		game->camera.persp.pos = v3_add(game->camera.persp.pos, v3_scale(game->camera.persp.dir, camspeed));
+	else if (input_manager_get(game->input_manager, SDL_SCANCODE_S) & INPUT_DOWN)
+		game->camera.persp.pos = v3_add(game->camera.persp.pos, v3_scale(game->camera.persp.dir, -camspeed));
+
+	if (input_manager_get(game->input_manager, SDL_SCANCODE_A) & INPUT_DOWN)
+		game->camera.persp.pos = v3_add(game->camera.persp.pos, v3_scale(game->camera.persp.right, camspeed));
+	else if (input_manager_get(game->input_manager, SDL_SCANCODE_D) & INPUT_DOWN)
+		game->camera.persp.pos = v3_add(game->camera.persp.pos, v3_scale(game->camera.persp.right, -camspeed));
 }
 
 void render(instance_t *game)
 {
 	vs_params_t params;
 	memcpy(params.model, &game->vs_params_ubo.model, sizeof(game->vs_params_ubo.model));
-	memcpy(params.view, &game->view, sizeof(game->view));
-	memcpy(params.proj, &game->proj, sizeof(game->proj));
+	memcpy(params.view, &game->camera.view, sizeof(game->view));
+	memcpy(params.proj, &game->camera.projection, sizeof(game->proj));
 	buffer_subdata(&game->vs_params_ubo.buffer, 0, sizeof(vs_params_t), &params);
 
 	sprite_manager_push(&game->sprite_manager, 
 		(sprite_t){
 			.tex_atlas = game->tiles_atlas,
 			.color = color_of(255),
-			.z = 0,
-			.pos = v2_of(80),
+			.z = 100,
+			.pos = v2_of(0),
 			.index = v2i_of(0),
 			.scale = v2_of(1),
 		});
@@ -192,26 +219,31 @@ void destroy(instance_t *game)
 
 void process(instance_t *game)
 {
-	double last = time_s();
+	double frame_last = time_s();
+	double tick_last = frame_last;
 	double tick_time = 0;
 	double sec_time = 0;
 
 	while (game->running)
 	{
-		double start = time_s();
-		game->time.now = start;
-		game->time.delta = start - last;
-		last = start;
+		double frame_start = time_s();
+		game->time.now = frame_start;
+		game->time.delta_frame = frame_start - frame_last;
+		frame_last = frame_start;
 
-		tick_time += game->time.delta;
-		while (tick_time >= game->time.dtTPS)
+		tick_time += game->time.delta_frame;
+		while (tick_time >= game->time.aimedDTTick)
 		{
 			tick(game);
+
+			double tick_start = time_s();
+			game->time.delta_tick = tick_start - tick_last;
+			tick_last = tick_start;
 			game->time.tick++;
-			tick_time -= game->time.dtTPS;
+			tick_time -= game->time.aimedDTTick;
 		}
 
-		sec_time += game->time.delta;
+		sec_time += game->time.delta_frame;
 		if (sec_time >= 1.0)
 		{
 			game->time.FPS = game->time.render;
@@ -230,8 +262,8 @@ void process(instance_t *game)
 
 		if (game->time.aimedFPS > 0)
 		{
-			double end = time_s();
-			int delay = (int)((game->time.dtFPS - (end - start)) * 1000.0);
+			double frame_end = time_s();
+			int delay = (int)((game->time.aimedDTFrame - (frame_end - frame_start)) * 1000.0);
 			if (delay > 0)
 				SDL_Delay(delay);
 		}

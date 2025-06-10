@@ -28,6 +28,7 @@ typedef struct {
 	color bg_col;
 
 	v2i size, resolution;
+	bool window_fbo;
 
 	buffer_t framebuf;
 	buffer_t renderbuf;

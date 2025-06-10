@@ -29,7 +29,7 @@ void	pipeline_create(pipeline_t *pipeline, shader_t shader, int buffer_count, pi
 	};
 
 	buffer_create(&pipeline->vao, BUFFER_VERTEX_ARRAY);
-	if (buffer_count > 0);	
+	if (buffer_count > 0)
 		pipeline->buffers = malloc(sizeof(*pipeline->buffers) * buffer_count);
 	for (int i = 0; i < buffer_count; i++)
 	{
@@ -74,7 +74,7 @@ void	pipeline_attributes_assign(pipeline_t *pipeline, int attributes_count, pipe
 	pipeline_limits_init();
 
 	ASSERT(attributes_count < pipeline_limits_get[PIPELINE_MAX_VERTEX_ATTRIB_COUNT],
-		"Reached max vertex attribs per pipeline (limit: %s)",
+		"Reached max vertex attribs per pipeline (limit: %d)",
 		pipeline_limits_get[PIPELINE_MAX_VERTEX_ATTRIB_COUNT]);
 
 	for (unsigned int i = 0; i < attributes_count; i++)

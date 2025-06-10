@@ -1,12 +1,7 @@
 #ifndef GFX_GFX_H
 # define GFX_GFX_H
 
-# include "shader.h"
-# include "buffer.h"
-# include "pipeline.h"
-# include "color.h"
-# include "texture.h"
-# include "window.h"
+# include <GL/glew.h>
 
 # ifndef GLAPIENTRY
 #  define GLAPIENTRY
