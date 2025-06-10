@@ -2,6 +2,7 @@
 
 #include "../util/assert.h"
 #include <GL/glew.h>
+#include <SDL2/SDL_video.h>
 
 typedef struct {
 	v2 pos, texcoord;
@@ -35,6 +36,9 @@ void	window_create(window_t *window, window_desc window_param)
 			window_param.size.x, window_param.size.y,
 			window_param.flags);
 	ASSERT(window->window, "Failed to create SDL window");
+
+	if (window_param.flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
+		window->fullscreen = true;
 
 	window->glcontext = 
 		SDL_GL_CreateContext(window->window);
@@ -180,4 +184,12 @@ void	window_commit(window_t *window)
 	}
 
 	SDL_GL_SwapWindow(window->window);
+}
+
+void	window_fullscreen(window_t *window)
+{
+	window->fullscreen = !window->fullscreen;
+
+	SDL_SetWindowFullscreen(window->window, 
+		window->fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
 }

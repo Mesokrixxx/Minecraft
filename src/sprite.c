@@ -240,6 +240,7 @@ void	sprite_manager_register(sprite_manager_t *manager, unsigned int *sprite_atl
 		});
 
 	v2i tex_size;
+	stbi_set_flip_vertically_on_load(true);
 	unsigned char *data = 
 		stbi_load(
 			atlas_desc.path, 

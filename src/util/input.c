@@ -57,7 +57,8 @@ void	input_manager_update(input_manager_t *im, double now)
 {
 	im->now = now;
 
-	im->mouse.motion = v2i_of(0);
+	im->mouse.motion_raw = v2i_of(0);
+	im->mouse.motion = v2_of(0);
 	im->mouse.scroll = v2_of(0);
 
 	dynlist_foreach(&im->clear,
@@ -73,12 +74,34 @@ void	input_manager_process(input_manager_t *im, SDL_Event *ev)
 
 	switch (ev->type) {
 		case (SDL_MOUSEMOTION):
-			im->mouse.motion = 
+			im->mouse.motion_raw = 
 				v2i_add(
-					im->mouse.motion,
+					im->mouse.motion_raw,
 					v2i_of(ev->motion.xrel, -ev->motion.yrel));
-			im->mouse.pos = 
+			im->mouse.pos_raw = 
 				v2i_of(ev->motion.x, im->window->size.y - ev->motion.y - 1);
+
+			if (im->window->window_fbo) {
+				v2 scale = 
+					v2_div(v2_from_v(im->window->resolution), 
+						v2_from_v(im->window->size));
+
+				im->mouse.pos = 
+					v2i_from_v(
+						v2_mul(
+							v2_from_v(im->mouse.pos_raw),
+							scale));
+				im->mouse.pos = 
+					v2i_clampv(
+						im->mouse.pos, 
+						v2i_of(0), v2i_add(im->window->resolution, v2i_of(-1)));
+				im->mouse.motion = 
+					v2_mul(v2_from_v(im->mouse.motion_raw), scale);
+			}
+			else {
+				im->mouse.motion = v2_from_v(im->mouse.motion_raw);
+				im->mouse.pos = im->mouse.pos_raw;
+			}
 			break ;
 		case (SDL_MOUSEWHEEL):
 			im->mouse.scroll = 

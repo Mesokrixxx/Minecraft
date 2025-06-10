@@ -9,5 +9,8 @@ flat in int instTexindex;
 out vec4 FragColor;
 
 void main() {
-	FragColor = texture(uTextures[instTexindex], uv);
+	vec4 texCol = texture(uTextures[instTexindex], uv);
+	if (texCol.a < 0.001)
+		discard;
+	FragColor = texCol * instCol;
 }

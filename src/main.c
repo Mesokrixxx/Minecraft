@@ -1,3 +1,4 @@
+#include "gfx/color.h"
 #include <SDL2/SDL_scancode.h>
 #ifdef _WINDOWS_
 # define SDL_MAIN_HANDLED
@@ -22,6 +23,8 @@
 #include "util/camera.h"
 #include "math/vars.h"
 #include "sprite.h"
+#include "font.h"
+#include "ui.h"
 
 typedef struct {
 	mat4 model;
@@ -41,7 +44,9 @@ typedef struct {
 		unsigned int bind_point;
 	}	vs_params_ubo;
 
-	unsigned int tiles_atlas, font_atlas;
+	ui_t ui;
+
+	unsigned int tiles_atlas;
 	sprite_manager_t sprite_manager;
 	
 	input_manager_t input_manager;
@@ -99,30 +104,28 @@ void init(instance_t *game)
 	ASSERT(buffer_valid(game->vs_params_ubo.buffer));
 
 	sprite_manager_create(&game->sprite_manager, game->vs_params_ubo.bind_point);
-
-	sprite_manager_register(&game->sprite_manager, &game->tiles_atlas, 
+	sprite_manager_register(&game->sprite_manager, &game->tiles_atlas,
 		(sprite_atlas_desc){
 			.path = "res/textures/tiles.png",
 			.sprite_size = v2i_of(8),
 			.format = SPRITE_RGBA,
 			.internal_format = SPRITE_RGBA,
 		});
-	sprite_manager_register(&game->sprite_manager, &game->font_atlas,
-		(sprite_atlas_desc){
-			.path = "res/textures/font.png",
-			.sprite_size = v2i_of(8),
-			.format = SPRITE_RGBA,
-			.internal_format = SPRITE_RGBA,
+	font_init(&game->sprite_manager);
+	input_manager_create(&game->input_manager, &game->window);
+	ui_init(&game->ui, &game->window,
+		(vs_params_ubo_desc){
+			.buffer = &game->vs_params_ubo.buffer,
+			.model = &game->vs_params_ubo.model,
 		});
 
-	input_manager_create(&game->input_manager, &game->window);
-
-	game->vs_params_ubo.model = m4_identity();
+	m4 model = m4_identity();
+	game->vs_params_ubo.model = model;
 	camera_init(&game->camera, 
 		(camera_desc){
 			.window = &game->window,
 			.type = CAMERA_PERSPECTIVE,
-			.znear = 0.01,
+			.znear = 0.1,
 			.zfar = 1000.0,
 			.perspective = (camera_perspective_desc){
 				.fov = rad(75.0),
@@ -148,6 +151,7 @@ void update(instance_t *game)
 		{
 			game->window.size = 
 				v2i_of(ev.window.data1, ev.window.data2);
+			ui_event_windowresize(&game->ui);
 		}
 		else
 			input_manager_process(&game->input_manager, &ev);
@@ -155,26 +159,40 @@ void update(instance_t *game)
 
 	if (input_manager_get(game->input_manager, SDL_SCANCODE_ESCAPE) & INPUT_PRESSED)
 		input_manager_mouse_grab(&game->input_manager);
+	if (input_manager_get(game->input_manager, SDL_SCANCODE_F11) & INPUT_PRESSED)
+		window_fullscreen(&game->window);
 
 	camera_update(&game->camera);
 
-	game->camera.persp.pitch += game->input_manager.mouse.motion.y / 1000.0;
-	game->camera.persp.yaw -= game->input_manager.mouse.motion.x / 1000.0;
+	if (game->input_manager.mouse.grab) {
+		game->camera.persp.pitch += game->input_manager.mouse.motion.y / 800.0;
+		game->camera.persp.yaw -= game->input_manager.mouse.motion.x / 800.0;
+	}
 }
 
 void tick(instance_t *game)
 {
-	float camspeed = 500.0 * game->time.delta_tick;
+	if (game->input_manager.mouse.grab) {
+		float camspeed = 100.0 * game->time.delta_tick;
 
-	if (input_manager_get(game->input_manager, SDL_SCANCODE_W) & INPUT_DOWN)
-		game->camera.persp.pos = v3_add(game->camera.persp.pos, v3_scale(game->camera.persp.dir, camspeed));
-	else if (input_manager_get(game->input_manager, SDL_SCANCODE_S) & INPUT_DOWN)
-		game->camera.persp.pos = v3_add(game->camera.persp.pos, v3_scale(game->camera.persp.dir, -camspeed));
+		v3 up = v3_of(0, 1, 0);
+		v3 forward = v3_of(sinf(game->camera.persp.yaw), 0, cosf(game->camera.persp.yaw));
+		v3 right = v3_cross(up, forward);
+		if (input_manager_get(game->input_manager, SDL_SCANCODE_W) & INPUT_DOWN)
+			game->camera.persp.pos = v3_add(game->camera.persp.pos, v3_scale(forward, camspeed));
+		else if (input_manager_get(game->input_manager, SDL_SCANCODE_S) & INPUT_DOWN)
+			game->camera.persp.pos = v3_add(game->camera.persp.pos, v3_scale(forward, -camspeed));
 
-	if (input_manager_get(game->input_manager, SDL_SCANCODE_A) & INPUT_DOWN)
-		game->camera.persp.pos = v3_add(game->camera.persp.pos, v3_scale(game->camera.persp.right, camspeed));
-	else if (input_manager_get(game->input_manager, SDL_SCANCODE_D) & INPUT_DOWN)
-		game->camera.persp.pos = v3_add(game->camera.persp.pos, v3_scale(game->camera.persp.right, -camspeed));
+		if (input_manager_get(game->input_manager, SDL_SCANCODE_A) & INPUT_DOWN)
+			game->camera.persp.pos = v3_add(game->camera.persp.pos, v3_scale(right, camspeed));
+		else if (input_manager_get(game->input_manager, SDL_SCANCODE_D) & INPUT_DOWN)
+			game->camera.persp.pos = v3_add(game->camera.persp.pos, v3_scale(right, -camspeed));
+
+		if (input_manager_get(game->input_manager, SDL_SCANCODE_SPACE) & INPUT_DOWN)
+			game->camera.persp.pos = v3_add(game->camera.persp.pos, v3_scale(up, camspeed));
+		else if (input_manager_get(game->input_manager, SDL_SCANCODE_LSHIFT) & INPUT_DOWN)
+			game->camera.persp.pos = v3_add(game->camera.persp.pos, v3_scale(up, -camspeed));
+	}
 }
 
 void render(instance_t *game)
@@ -185,24 +203,20 @@ void render(instance_t *game)
 	memcpy(params.proj, &game->camera.projection, sizeof(game->proj));
 	buffer_subdata(&game->vs_params_ubo.buffer, 0, sizeof(vs_params_t), &params);
 
-	sprite_manager_push(&game->sprite_manager, 
-		(sprite_t){
-			.tex_atlas = game->tiles_atlas,
-			.color = color_of(255),
-			.z = 100,
-			.pos = v2_of(0),
-			.index = v2i_of(0),
-			.scale = v2_of(1),
-		});
-	sprite_manager_push(&game->sprite_manager, 
-		(sprite_t){
-			.tex_atlas = game->font_atlas,
+	sprite_manager_draw(&game->sprite_manager);
+	ui_pass(game->ui);
+
+	char debug[512];
+	sprintf(debug, "FPS:%u\nTPS:%u",
+		game->time.FPS, game->time.TPS);
+	font_str(debug, 
+		(font_desc){
 			.color = color_of(255),
 			.z = 0,
-			.pos = v2_of(50),
-			.index = v2i_of(0),
-			.scale = v2_of(1),
+			.pos = v2_of(0, game->window.size.y - 3 * 8),
+			.scale = v2_of(3),
 		});
+
 	sprite_manager_draw(&game->sprite_manager);
 	window_commit(&game->window);
 }
@@ -253,7 +267,6 @@ void process(instance_t *game)
 			game->time.tick = 0;
 			
 			sec_time = 0;
-			printf("FPS: %u TPS: %u\n", game->time.FPS, game->time.TPS);
 		}
 
 		update(game);

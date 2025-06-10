@@ -28,6 +28,7 @@ typedef struct {
 	color bg_col;
 
 	v2i size, resolution;
+	bool fullscreen;
 	bool window_fbo;
 
 	buffer_t framebuf;
@@ -46,5 +47,6 @@ void	window_create(window_t *window, window_desc window_param);
 void	window_destroy(window_t *window);
 void	window_update(window_t *window);
 void	window_commit(window_t *window);
+void	window_fullscreen(window_t *window);
 
 #endif

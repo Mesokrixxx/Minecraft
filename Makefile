@@ -15,6 +15,7 @@ else
 		CFLAGS = -D_LINUX_
 		LFLAGS = -lSDL2 -lGLEW -lGL -lcglm -lm
 	endif
+# TODO: macos makefile part
 	ifeq (UNAME_S, Darwin)
 		CFLAGS = -D_APPLE_
 		LFLAGS = 

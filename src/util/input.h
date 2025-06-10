@@ -41,7 +41,9 @@ typedef struct {
 
 	struct {
 		bool grab;
-		v2i pos, motion;
+		v2i pos_raw, motion_raw;
+		v2i pos;
+		v2 motion;
 		v2 scroll;
 	}	mouse;
 

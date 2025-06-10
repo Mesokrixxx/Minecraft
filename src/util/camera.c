@@ -3,6 +3,8 @@
 #include "assert.h"
 #include "../math/vars.h"
 
+#define PTICH_LIMIT (PI_2 - 0.1f)
+
 void	camera_init(camera_t *camera, camera_desc desc)
 {
 	*camera = (camera_t){
@@ -43,7 +45,7 @@ void	camera_update(camera_t *camera)
 					camera->zfar);
 			break;
 		case (CAMERA_PERSPECTIVE):
-			camera->persp.pitch = clamp(camera->persp.pitch, -PI_2, PI_2);
+			camera->persp.pitch = clamp(camera->persp.pitch, -PTICH_LIMIT, PTICH_LIMIT);
 			camera->persp.yaw = 
 				(camera->persp.yaw < 0 ? TAU : 0.0) + fmodf(camera->persp.yaw, TAU);
 			camera->persp.dir = (v3) {{

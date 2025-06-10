@@ -1,6 +1,7 @@
 #ifndef MATH_ALIASES_H
 # define MATH_ALIASES_H
 
+# include <cglm/types-struct.h>
 # include <cglm/struct/vec2.h>
 # include <cglm/struct/ivec2.h>
 # include <cglm/struct/vec3.h>
@@ -9,8 +10,10 @@
 # include <cglm/struct/ivec4.h>
 # include <cglm/struct/mat4.h>
 # include <cglm/struct/cam.h>
+# include <cglm/struct/affine.h>
 
 # include "../util/macros.h"
+# include "vars.h"
 
 # define v2_add glms_vec2_add
 # define v2_sub glms_vec2_sub
@@ -27,6 +30,9 @@
 # define v3_scale glms_vec3_scale
 
 # define m4_identity glms_mat4_identity
+# define m4_rotate_y glms_rotate_y
+# define m4_rotate_x glms_rotate_x
+# define m4_rotate_z glms_rotate_z
 
 # define cam_ortho glms_ortho
 # define cam_lookat glms_lookat
@@ -77,5 +83,9 @@ typedef mat4s	m4;
 # define _V4IOF1(xyzw) ({ int _xyzw = (xyzw); ((v4i){{ _xyzw, _xyzw, _xyzw, _xyzw }}); })
 # define _V4IOF0() ((v4i){{ 0, 0, 0, 0 }})
 # define v4i_of(...) VMACRO(_V4IOF, __VA_ARGS__)
+
+static inline v2i v2i_clampv(v2i origin, v2i min, v2i max) {
+	return (v2i_of(clamp(origin.x, min.x, max.x), clamp(origin.y, min.y, max.y)));
+}
 
 #endif
