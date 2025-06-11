@@ -5,12 +5,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <string.h>
+
 char	*file_get(const char *path)
 {
 	FILE *f;
 	size_t fsize;
 	char *fdata;
 
+	ASSERT(path, "no path given");
 	f = fopen(path, "rb");
 	ASSERT(f, "failed to open %s", path);
 
@@ -18,7 +21,7 @@ char	*file_get(const char *path)
 	fsize = ftell(f);
 	fseek(f, 0, SEEK_SET);
 
-	fdata = malloc(sizeof(char) * fsize);
+	fdata = malloc(sizeof(char) * (fsize + 1));
 
 	size_t byte_read = fread(fdata, 1, fsize, f);
 	ASSERT(byte_read == fsize, 

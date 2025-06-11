@@ -65,6 +65,7 @@ typedef struct {
 	}	render;
 }	pipeline_t;
 
+// Call pipeline bind
 void	pipeline_create(pipeline_t *pipeline, shader_t shader, int buffer_count, pipeline_buffers_desc *buffers);
 void	pipeline_destroy(pipeline_t *pipeline);
 void	pipeline_bind(pipeline_t pipeline);

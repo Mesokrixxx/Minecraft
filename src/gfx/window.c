@@ -55,8 +55,8 @@ void	window_create(window_t *window, window_desc window_param)
 	window->window_fbo = true;
 	buffer_create(&window->framebuf, BUFFER_FRAME);
 
-	shader_create(&window->fboshader, window_param.sh_vertsource, window_param.sh_fragsource);
-	shader_uniform_loc(window->fboshader, window_param.uniform_texname, &window->texloc);
+	shader_create(&window->fboshader, "src/gfx/shaders/screenquad.vert", "src/gfx/shaders/screenquad.frag");
+	shader_uniform_loc(window->fboshader, "screenquad", &window->texloc);
 	ASSERT(shader_valid(window->fboshader), "failed to create window fbo shader");
 	
 	texture_create(&window->fbotex, TEXTURE_2D);
@@ -157,7 +157,7 @@ void	window_destroy(window_t *window)
 	*window = (window_t){0};
 }
 
-void	window_update(window_t *window)
+void	window_update(window_t *window, unsigned int clearBuffers)
 {
 	if (window->window_fbo) {
 		buffer_bind(window->framebuf);
@@ -167,7 +167,7 @@ void	window_update(window_t *window)
 	glClearColor(
 		window->bg_col.r, window->bg_col.g,
 		window->bg_col.b, window->bg_col.a);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(clearBuffers);
 }
 
 void	window_commit(window_t *window)

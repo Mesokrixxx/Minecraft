@@ -15,10 +15,6 @@ typedef struct {
 	const char *title;
 	bool centered;
 	unsigned int flags;
-
-	// Both used for FBO shader
-	const char *sh_vertsource, *sh_fragsource;
-	const char *uniform_texname;
 }	window_desc;
 
 typedef struct {
@@ -45,7 +41,7 @@ typedef struct {
 // init glew
 void	window_create(window_t *window, window_desc window_param);
 void	window_destroy(window_t *window);
-void	window_update(window_t *window);
+void	window_update(window_t *window, unsigned int clearBuffers);
 void	window_commit(window_t *window);
 void	window_fullscreen(window_t *window);
 

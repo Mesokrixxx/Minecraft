@@ -8,6 +8,7 @@
 # include <cglm/struct/ivec3.h>
 # include <cglm/struct/vec4.h>
 # include <cglm/struct/ivec4.h>
+# include <cglm/struct/mat3.h>
 # include <cglm/struct/mat4.h>
 # include <cglm/struct/cam.h>
 # include <cglm/struct/affine.h>
@@ -29,6 +30,8 @@
 # define v3_cross glms_vec3_cross
 # define v3_scale glms_vec3_scale
 
+# define m3_identity glms_mat3_identity
+
 # define m4_identity glms_mat4_identity
 # define m4_rotate_y glms_rotate_y
 # define m4_rotate_x glms_rotate_x
@@ -44,6 +47,7 @@ typedef vec3s	v3;
 typedef ivec3s	v3i;
 typedef vec4s	v4;
 typedef ivec4s	v4i;
+typedef mat3s	m3;
 typedef mat4s	m4;
 
 # define _V2OF2(x, y) ((v2){{ x, y }})

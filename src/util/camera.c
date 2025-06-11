@@ -45,6 +45,8 @@ void	camera_update(camera_t *camera)
 					camera->zfar);
 			break;
 		case (CAMERA_PERSPECTIVE):
+			camera->persp.aspect = 
+				((float)camera->window->size.x) / ((float)camera->window->size.y);
 			camera->persp.pitch = clamp(camera->persp.pitch, -PTICH_LIMIT, PTICH_LIMIT);
 			camera->persp.yaw = 
 				(camera->persp.yaw < 0 ? TAU : 0.0) + fmodf(camera->persp.yaw, TAU);

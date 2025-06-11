@@ -1,4 +1,5 @@
 #include "sprite.h"
+#include "util/dynlist.h"
 
 #ifndef STB_IMAGE_IMPLEMENTATION
 # define STB_IMAGE_IMPLEMENTATION
@@ -49,6 +50,7 @@ void	sprite_manager_create(sprite_manager_t *manager, unsigned int vs_params_bp)
 	};
 
 	shader_create(&shader, "res/shaders/sprite.vert", "res/shaders/sprite.frag");
+	shader_uniform_setbindpoint(shader, "vs_params", vs_params_bp);
 	shader_uniform_loc(shader, "uTextures", &manager->atlasloc);
 	ASSERT(shader_valid(shader));
 
@@ -152,7 +154,7 @@ void	sprite_manager_create(sprite_manager_t *manager, unsigned int vs_params_bp)
 void	sprite_manager_destroy(sprite_manager_t *manager)
 {
 	for (int i = 0; i < manager->atlascount; i++)
-		texture_destroy(&manager->atlas[i].tex);
+		sprite_atlas_destroy(&manager->atlas[i]);
 	free(manager->atlas);
 
 	dynlist_destroy(&manager->sprites_list);
@@ -165,31 +167,37 @@ void	sprite_manager_destroy(sprite_manager_t *manager)
 
 void	sprite_manager_push(sprite_manager_t *manager, sprite_t sprite)
 {
-	ASSERT(sprite.tex_atlas < manager->atlascount,
-		"bound to undex tex atlas");
+	bool registered_tex_atlas = false;
 
-	sprite_atlas_t atlas =
-		manager->atlas[sprite.tex_atlas];
+	for (int i = 0; i < SPRITE_TEXATLAS_MAX_COUNT; i++)
+	{
+		if (manager->atlas[i].tex.id == sprite.tex_atlas.tex.id)
+		{
+			registered_tex_atlas = true;
+			break ;
+		}
+	}
 
-	ASSERT(sprite.index.x < atlas.size_in_sprites.x
-		&& sprite.index.y < atlas.size_in_sprites.y,
+	ASSERT(registered_tex_atlas, "tex atlas not registered in sprite manager");
+	ASSERT(sprite.index.x < sprite.tex_atlas.size_in_sprites.x
+		&& sprite.index.y < sprite.tex_atlas.size_in_sprites.y,
 		"Index out of bound");
 
 	v2 uv_min = 
 		v2_mul(
 			v2_from_v(
-				v2i_mul(sprite.index, atlas.sprite_size)),
-			atlas.tx_per_px);
+				v2i_mul(sprite.index, sprite.tex_atlas.sprite_size)),
+			sprite.tex_atlas.tx_per_px);
 	v2 uv_max = 
-		v2_add(uv_min, atlas.sprite_size_tx);
+		v2_add(uv_min, sprite.tex_atlas.sprite_size_tx);
 
 	dynlist_append(&manager->sprites_list, 
 		&(sprite_instance_t){
 			.color = sprite.color,
 			.offset = sprite.pos,
 			.z = sprite.z,
-			.scale = v2_mul(v2_from_v(atlas.sprite_size), sprite.scale),
-			.texindex = sprite.tex_atlas,
+			.scale = v2_mul(v2_from_v(sprite.tex_atlas.sprite_size), sprite.scale),
+			.texindex = sprite.tex_atlas.tex.bind_point,
 			.uv_min = uv_min,
 			.uv_max = uv_max,
 		});
@@ -197,27 +205,34 @@ void	sprite_manager_push(sprite_manager_t *manager, sprite_t sprite)
 
 void	sprite_manager_draw(sprite_manager_t *manager)
 {
-	if (!dynlist_size(manager->sprites_list))
+	unsigned int dsize = dynlist_size(manager->sprites_list);
+
+	if (!dsize)
 		return ;
 
 	for (int i = 0; i < manager->atlascount; i++)
 		texture_bind(manager->atlas[i].tex);
+
+	unsigned int count = min(dsize, SPRITE_MAXCOUNT_PER_FRAME);
+	if (count != dsize)
+		fprintf(stderr, "REACHED SPRITES LIMIT (limit: %u, drawing %d)\n", 
+			SPRITE_MAXCOUNT_PER_FRAME, dsize);
 
 	pipeline_bind(manager->pipeline);
 	pipeline_subdata(
 		&manager->pipeline,
 		manager->instance_buffer_index,
 		0,
-		dynlist_bytesize(manager->sprites_list),
+		count * manager->sprites_list.data_size,
 		dynlist_data(manager->sprites_list));
 	pipeline_render(
 		manager->pipeline,
-		dynlist_size(manager->sprites_list));
+		count);
 
 	dynlist_clear(&manager->sprites_list);
 }
 
-void	sprite_manager_register(sprite_manager_t *manager, unsigned int *sprite_atlas_index, sprite_atlas_desc atlas_desc)
+void	sprite_manager_register(sprite_manager_t *manager, sprite_atlas_t atlas)
 {
 	static unsigned int atlasbps[SPRITE_TEXATLAS_MAX_COUNT];
 
@@ -226,6 +241,16 @@ void	sprite_manager_register(sprite_manager_t *manager, unsigned int *sprite_atl
 
 	pipeline_bind(manager->pipeline);
 
+	atlasbps[manager->atlascount] = atlas.tex.bind_point;
+
+	manager->atlas[manager->atlascount] = atlas;
+	manager->atlascount++;
+
+	glUniform1iv(manager->atlasloc, manager->atlascount, (const int *)atlasbps);
+}
+
+void	sprite_atlas_create(sprite_atlas_t *atlas, sprite_atlas_desc atlas_desc)
+{
 	sprite_atlas_t new_tatlas = {
 		.sprite_size = atlas_desc.sprite_size,
 	};
@@ -270,11 +295,15 @@ void	sprite_manager_register(sprite_manager_t *manager, unsigned int *sprite_atl
 	new_tatlas.sprite_size_tx = 
 		v2_mul(v2_from_v(new_tatlas.sprite_size), new_tatlas.tx_per_px);
 
-	atlasbps[manager->atlascount] = new_tatlas.tex.bind_point;
+	ASSERT(texture_valid(new_tatlas.tex), 
+		"failed to create new tex atlas %s", atlas_desc.path);
 
-	manager->atlas[manager->atlascount] = new_tatlas;
-	*sprite_atlas_index = manager->atlascount;
-	manager->atlascount++;
+	*atlas = new_tatlas;
+}
 
-	glUniform1iv(manager->atlasloc, manager->atlascount, (const int *)atlasbps);
+void	sprite_atlas_destroy(sprite_atlas_t *atlas)
+{
+	texture_destroy(&atlas->tex);
+
+	*atlas = (sprite_atlas_t){0};
 }

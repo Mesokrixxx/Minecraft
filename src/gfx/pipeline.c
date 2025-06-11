@@ -38,6 +38,8 @@ void	pipeline_create(pipeline_t *pipeline, shader_t shader, int buffer_count, pi
 		pipeline->buffers[i].stride = buffers_desc[i].stride;
 		pipeline->buffers[i].steptype = buffers_desc[i].steptype;
 	}
+
+	pipeline_bind(*pipeline);
 }
 
 void	pipeline_destroy(pipeline_t *pipeline)
@@ -76,6 +78,8 @@ void	pipeline_attributes_assign(pipeline_t *pipeline, int attributes_count, pipe
 	ASSERT(attributes_count < pipeline_limits_get[PIPELINE_MAX_VERTEX_ATTRIB_COUNT],
 		"Reached max vertex attribs per pipeline (limit: %d)",
 		pipeline_limits_get[PIPELINE_MAX_VERTEX_ATTRIB_COUNT]);
+
+	pipeline_bind(*pipeline);
 
 	for (unsigned int i = 0; i < attributes_count; i++)
 	{

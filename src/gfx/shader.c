@@ -4,6 +4,7 @@
 #include "../util/assert.h"
 
 #include <GL/glew.h>
+#include <string.h>
 
 static void shader_compile(unsigned int *shader, const char *data, unsigned int shadertype)
 {

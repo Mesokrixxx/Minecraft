@@ -25,6 +25,7 @@
 #include "sprite.h"
 #include "font.h"
 #include "ui.h"
+#include "block.h"
 
 typedef struct {
 	mat4 model;
@@ -46,9 +47,9 @@ typedef struct {
 
 	ui_t ui;
 
-	unsigned int tiles_atlas;
+	sprite_atlas_t tiles_atlas;
 	sprite_manager_t sprite_manager;
-	
+	blocks_manager_t blocks_manager;
 	input_manager_t input_manager;
 
 	struct {
@@ -91,12 +92,11 @@ void init(instance_t *game)
 			.centered = true,
 			.flags = SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE,
 			.background_color = color_of(0),
-			.sh_vertsource = "res/shaders/screenquad.vert",
-			.sh_fragsource = "res/shaders/screenquad.frag",
-			.uniform_texname = "screenquad",
 		});
 
 	gfx_glcallback_enable();
+
+	glEnable(GL_DEPTH_TEST);
 
 	buffer_create(&game->vs_params_ubo.buffer, BUFFER_UNIFORM, BUFFER_DYNAMIC_DRAW);
 	buffer_data(&game->vs_params_ubo.buffer, sizeof(vs_params_t), NULL);
@@ -104,13 +104,14 @@ void init(instance_t *game)
 	ASSERT(buffer_valid(game->vs_params_ubo.buffer));
 
 	sprite_manager_create(&game->sprite_manager, game->vs_params_ubo.bind_point);
-	sprite_manager_register(&game->sprite_manager, &game->tiles_atlas,
+	sprite_atlas_create(&game->tiles_atlas,
 		(sprite_atlas_desc){
-			.path = "res/textures/tiles.png",
 			.sprite_size = v2i_of(8),
+			.path = "res/textures/tiles.png",
 			.format = SPRITE_RGBA,
 			.internal_format = SPRITE_RGBA,
 		});
+	sprite_manager_register(&game->sprite_manager, game->tiles_atlas);
 	font_init(&game->sprite_manager);
 	input_manager_create(&game->input_manager, &game->window);
 	ui_init(&game->ui, &game->window,
@@ -118,6 +119,7 @@ void init(instance_t *game)
 			.buffer = &game->vs_params_ubo.buffer,
 			.model = &game->vs_params_ubo.model,
 		});
+	blocks_manager_init(&game->blocks_manager, game->vs_params_ubo.bind_point);
 
 	m4 model = m4_identity();
 	game->vs_params_ubo.model = model;
@@ -140,7 +142,7 @@ void init(instance_t *game)
 
 void update(instance_t *game)
 {
-	window_update(&game->window);
+	window_update(&game->window, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	input_manager_update(&game->input_manager, game->time.now);
 
 	SDL_Event ev;
@@ -173,7 +175,7 @@ void update(instance_t *game)
 void tick(instance_t *game)
 {
 	if (game->input_manager.mouse.grab) {
-		float camspeed = 100.0 * game->time.delta_tick;
+		float camspeed = 5.0 * game->time.delta_tick;
 
 		v3 up = v3_of(0, 1, 0);
 		v3 forward = v3_of(sinf(game->camera.persp.yaw), 0, cosf(game->camera.persp.yaw));
@@ -203,7 +205,13 @@ void render(instance_t *game)
 	memcpy(params.proj, &game->camera.projection, sizeof(game->proj));
 	buffer_subdata(&game->vs_params_ubo.buffer, 0, sizeof(vs_params_t), &params);
 
-	sprite_manager_draw(&game->sprite_manager);
+	blocks_manager_push(&game->blocks_manager, 
+		(block_desc){
+			.type = BLOCK_GRASS,
+			.pos = v2_of(0, 0),
+			.z = 5,
+		});
+	blocks_manager_render(&game->blocks_manager);
 	ui_pass(game->ui);
 
 	char debug[512];
@@ -223,6 +231,7 @@ void render(instance_t *game)
 
 void destroy(instance_t *game)
 {
+	blocks_manager_destroy(&game->blocks_manager);
 	input_manager_destroy(&game->input_manager);
 	sprite_manager_destroy(&game->sprite_manager);
 	buffer_destroy(&game->vs_params_ubo.buffer);

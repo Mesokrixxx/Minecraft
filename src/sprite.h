@@ -7,15 +7,6 @@
 # include "math/aliases.h"
 # include "util/dynlist.h"
 
-typedef struct {
-	unsigned int tex_atlas;
-	v2 pos;
-	float z;
-	color color;
-	v2i	index;
-	v2 scale;
-}	sprite_t;
-
 typedef enum {
 	SPRITE_RGBA,
 	SPRITE_FORMAT_COUNT,
@@ -37,6 +28,15 @@ typedef struct {
 }	sprite_atlas_t;
 
 typedef struct {
+	sprite_atlas_t tex_atlas;
+	v2 pos;
+	float z;
+	color color;
+	v2i	index;
+	v2 scale;
+}	sprite_t;
+
+typedef struct {
 	pipeline_t pipeline;
 	shader_t shader;
 
@@ -50,9 +50,12 @@ typedef struct {
 }	sprite_manager_t;
 
 void	sprite_manager_create(sprite_manager_t *manager, unsigned int vs_params_bp);
+// Destroy registered sprite_atlas
 void	sprite_manager_destroy(sprite_manager_t *manager);
 void	sprite_manager_push(sprite_manager_t *manager, sprite_t sprite);
 void	sprite_manager_draw(sprite_manager_t *manager);
-void	sprite_manager_register(sprite_manager_t *manager, unsigned int *sprite_atlas_index, sprite_atlas_desc atlas_desc);
+void	sprite_manager_register(sprite_manager_t *manager, sprite_atlas_t atlas);
+void	sprite_atlas_create(sprite_atlas_t *atlas, sprite_atlas_desc atlas_desc);
+void	sprite_atlas_destroy(sprite_atlas_t *atlas);
 
 #endif
