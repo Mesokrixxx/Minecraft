@@ -8,7 +8,10 @@
 # include "math/aliases.h"
 
 typedef enum {
+	BLOCK_AIR = -1,
 	BLOCK_GRASS,
+	BLOCK_DIRT,
+	BLOCK_STONE,
 	BLOCK_TYPE_COUNT,
 }	block_type_e;
 

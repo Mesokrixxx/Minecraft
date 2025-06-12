@@ -12,5 +12,6 @@
 # define clamp(a, b, c) max(b, min(a, c))
 # define rad(d) (((d) * PI) / 180)
 # define deg(r) (((r) * 180) / PI)
+# define div_floor(a, b) ({ __typeof__(a) _a = (a), _b = (b); ((_a >= 0) ? (_a / _b) : ((_a - _b + 1) / _b)); })
 
 #endif

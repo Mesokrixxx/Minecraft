@@ -8,6 +8,7 @@
 # endif 
 
 void	gfx_glcallback_enable();
+void	gfx_wireframe();
 
 void GLAPIENTRY gfx_glcallback(
 	GLenum source, 

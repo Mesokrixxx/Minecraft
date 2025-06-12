@@ -105,7 +105,7 @@ void	blocks_manager_init(blocks_manager_t *manager, unsigned int vsparams_bp)
 			}
 		});
 	manager->instbuf = 1;
-	pipeline_attributes_assign(&manager->pipeline, 5, 
+	pipeline_attributes_assign(&manager->pipeline, 6, 
 		(pipeline_attributes_desc[]){
 			{
 				.size = 3,
@@ -162,6 +162,8 @@ void	blocks_manager_destroy(blocks_manager_t *manager)
 
 void	blocks_manager_push(blocks_manager_t *manager, block_desc block)
 {
+	if (block.type == BLOCK_AIR)
+		return ;
 	dynlist_append(&manager->blocks, 
 		&(instances_t){
 			.offset = block.pos,

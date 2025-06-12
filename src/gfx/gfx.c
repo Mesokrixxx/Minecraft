@@ -21,3 +21,10 @@ void GLAPIENTRY gfx_glcallback(
 {    
     fprintf(stderr, ">>> %s\n", message);
 }
+
+static unsigned int mode = GL_FILL; 
+void	gfx_wireframe()
+{
+	mode = mode == GL_FILL ? GL_LINE : GL_FILL;
+	glPolygonMode(GL_FRONT_AND_BACK, mode);
+}

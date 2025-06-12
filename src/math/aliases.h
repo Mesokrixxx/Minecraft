@@ -24,6 +24,7 @@
 # define v2i_add glms_ivec2_add
 # define v2i_mul glms_ivec2_mul
 # define v2i_div glms_ivec2_div
+# define v2i_eqv glms_ivec2_eqv
 
 # define v3_add glms_vec3_add
 # define v3_normalize glms_vec3_normalize
@@ -61,6 +62,7 @@ typedef mat4s	m4;
 # define _V2IOF0() ((v2i){{ 0, 0 }})
 # define v2i_of(...) VMACRO(_V2IOF, __VA_ARGS__)
 # define v2i_from_v(v) ({ __typeof__(v) _v = (v); ((v2i){{ _v.x, _v.y }}); })
+# define v2i_div_floor(v1, v2) ({ v2i _v1 = (v1), _v2 = (v2); ((v2i){{ div_floor(_v1.x, _v2.x), div_floor(_v1.y, _v2.y) }}); })
 
 # define _V3OF3(x, y, z) ((v3){{ x, y, z }})
 # define _V3OF2(v2, z) ({ __typeof__(v2) _v2 = (v2); ((v3){{ _v2.x, _v2.y, z }}); })
@@ -73,6 +75,7 @@ typedef mat4s	m4;
 # define _V3IOF1(xyz) ({ int _xyz = (xyz); ((v3i){{ _xyz, _xyz, _xyz }}); })
 # define _V3IOF0() ((v3i){{ 0, 0, 0 }})
 # define v3i_of(...) VMACRO(_V3IOF, __VA_ARGS__)
+# define v3i_from_v(v) ({ __typeof__(v) _v = (v); ((v3i){{ _v.x, _v.y, _v.z }}); })
 
 # define _V4OF4(x, y, z, w) ((v4){{ x, y, z, w }})
 # define _V4OF3(v2, z, w) ({ __typeof__(v2) _v2 = (v2); ((v4){{ _v2.x, _v2.y, z, w }}); })

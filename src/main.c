@@ -4,7 +4,7 @@
 # define SDL_MAIN_HANDLED
 #endif
 
-#define DEFAULT_FPS 240
+#define DEFAULT_FPS 0
 #define DEFAULT_TPS 60
 
 #define DEFAULT_WINDOW_SIZEX 1080
@@ -26,6 +26,7 @@
 #include "font.h"
 #include "ui.h"
 #include "block.h"
+#include "chunk.h"
 
 typedef struct {
 	mat4 model;
@@ -60,6 +61,7 @@ typedef struct {
 		double aimedDTFrame, aimedDTTick;
 	} time;
 	
+	bool debug;
 	bool running;
 }	instance_t;
 
@@ -120,6 +122,8 @@ void init(instance_t *game)
 			.model = &game->vs_params_ubo.model,
 		});
 	blocks_manager_init(&game->blocks_manager, game->vs_params_ubo.bind_point);
+	chunks_init(&game->blocks_manager);
+	chunk_load(v3i_of(0));
 
 	m4 model = m4_identity();
 	game->vs_params_ubo.model = model;
@@ -163,6 +167,10 @@ void update(instance_t *game)
 		input_manager_mouse_grab(&game->input_manager);
 	if (input_manager_get(game->input_manager, SDL_SCANCODE_F11) & INPUT_PRESSED)
 		window_fullscreen(&game->window);
+	if (input_manager_get(game->input_manager, SDL_SCANCODE_V) & INPUT_PRESSED)
+		gfx_wireframe();
+	if (input_manager_get(game->input_manager, SDL_SCANCODE_G) & INPUT_PRESSED)
+		game->debug = !game->debug;
 
 	camera_update(&game->camera);
 
@@ -175,7 +183,7 @@ void update(instance_t *game)
 void tick(instance_t *game)
 {
 	if (game->input_manager.mouse.grab) {
-		float camspeed = 5.0 * game->time.delta_tick;
+		float camspeed = 20.0 * game->time.delta_tick;
 
 		v3 up = v3_of(0, 1, 0);
 		v3 forward = v3_of(sinf(game->camera.persp.yaw), 0, cosf(game->camera.persp.yaw));
@@ -195,6 +203,17 @@ void tick(instance_t *game)
 		else if (input_manager_get(game->input_manager, SDL_SCANCODE_LSHIFT) & INPUT_DOWN)
 			game->camera.persp.pos = v3_add(game->camera.persp.pos, v3_scale(up, -camspeed));
 	}
+
+	if (!game->debug) {
+		static v2i last_chunk;
+		v2i camera_pos = v2i_of(game->camera.persp.pos.x, game->camera.persp.pos.z);
+		v2i camera_chunk_pos = v2i_div_floor(camera_pos, v2i_of(16));
+		if (!v2i_eqv(camera_chunk_pos, last_chunk)) {
+			chunk_unload(v3i_of(last_chunk.x * 16, 0, last_chunk.y * 16));
+			chunk_load(v3i_of(camera_chunk_pos.x * 16, 0, camera_chunk_pos.y * 16));
+			last_chunk = camera_chunk_pos;
+		}
+	}
 }
 
 void render(instance_t *game)
@@ -205,13 +224,7 @@ void render(instance_t *game)
 	memcpy(params.proj, &game->camera.projection, sizeof(game->proj));
 	buffer_subdata(&game->vs_params_ubo.buffer, 0, sizeof(vs_params_t), &params);
 
-	blocks_manager_push(&game->blocks_manager, 
-		(block_desc){
-			.type = BLOCK_GRASS,
-			.pos = v2_of(0, 0),
-			.z = 5,
-		});
-	blocks_manager_render(&game->blocks_manager);
+	chunks_render();
 	ui_pass(game->ui);
 
 	char debug[512];
@@ -231,6 +244,7 @@ void render(instance_t *game)
 
 void destroy(instance_t *game)
 {
+	chunks_end();
 	blocks_manager_destroy(&game->blocks_manager);
 	input_manager_destroy(&game->input_manager);
 	sprite_manager_destroy(&game->sprite_manager);
